@@ -9,10 +9,8 @@
 </head>
 <body>
   <div class="container">
-    <div class="row">
+    <div class="d-block row text-center">
       <h1>Event Calendar</h1>
-
-      <p id="calendar_month"></p>
       <div class="btn-group py-4" role="group" aria-label="Basic example">
         <button type="button" class="btn btn-secondary" onclick="changeMonth('January')">January</button>
         <button type="button" class="btn btn-secondary" onclick="changeMonth('February')">February</button>
@@ -27,7 +25,8 @@
         <button type="button" class="btn btn-secondary" onclick="changeMonth('November')">November</button>
         <button type="button" class="btn btn-secondary" onclick="changeMonth('December')">December</button>
       </div>
-      <table id="calendar"></table>
+      <p id="calendar_month"></p>
+      <table id="calendar" class="w-100"></table>
       <textarea id="JSON_value" class="form-control my-4" aria-label="With textarea"></textarea>
       <button type="button" class="btn btn-primary" onclick="generateCalendar()">Update Record</button>
     </div>
@@ -36,6 +35,7 @@
 </html>
 <script>
 $( '#JSON_value' ).html(`{"2018_08_19":{"venue": "FOUNDATION TRUTH", "background": "https://thumbnailer.mixcloud.com/unsafe/180x180/extaudio/d/a/c/2/3677-82f7-49ca-bed8-051e847d93e3"}, "2018_08_25":{"venue": "FOUNDATION TRUTH 2"}}`)
+$( '#calendar_month' ).html(`Month of ${moment().format("MMMM")}`)
 window.onload = generateCalendar(moment().format("MM"));
 function generateCalendar(month) {
   if (!month) {
@@ -108,40 +108,6 @@ function loadEvent(date) {
 function changeMonth(date) {
   $( '#calendar_month' ).html(`Month of ${date}`)
   generateCalendar(moment().month(date).format("MM"));
-}
-function getImageLightness(imageSrc,callback) {
-    var img = document.createElement("img");
-    img.src = imageSrc;
-    img.style.display = "none";
-    document.body.appendChild(img);
-
-    var colorSum = 0;
-
-    img.onload = function() {
-        // create canvas
-        var canvas = document.createElement("canvas");
-        canvas.width = this.width;
-        canvas.height = this.height;
-
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(this,0,0);
-
-        var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-        var data = imageData.data;
-        var r,g,b,avg;
-
-        for(var x = 0, len = data.length; x < len; x+=4) {
-            r = data[x];
-            g = data[x+1];
-            b = data[x+2];
-
-            avg = Math.floor((r+g+b)/3);
-            colorSum += avg;
-        }
-
-        var brightness = Math.floor(colorSum / (this.width*this.height));
-        callback(brightness);
-    }
 }
 </script>
 <style media="screen">
