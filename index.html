@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <h1>Event Calendar</h1>
+
+      <p id="calendar_month"></p>
+      <div class="btn-group py-4" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('January')">January</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('February')">February</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('March')">March</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('April')">April</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('May')">May</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('June')">June</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('July')">July</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('August')">August</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('September')">September</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('October')">October</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('November')">November</button>
+        <button type="button" class="btn btn-secondary" onclick="changeMonth('December')">December</button>
+      </div>
+      <table id="calendar"></table>
+      <textarea id="JSON_value" class="form-control my-4" aria-label="With textarea"></textarea>
+      <button type="button" class="btn btn-primary" onclick="generateCalendar()">Update Record</button>
+    </div>
+  </div>
+</body>
+</html>
+<script>
+$( '#JSON_value' ).html(`{"2018_08_19":{"venue": "FOUNDATION TRUTH", "background": "https://thumbnailer.mixcloud.com/unsafe/180x180/extaudio/d/a/c/2/3677-82f7-49ca-bed8-051e847d93e3"}, "2018_08_25":{"venue": "FOUNDATION TRUTH 2"}}`)
+window.onload = generateCalendar(moment().format("MM"));
+function generateCalendar(month) {
+  if (!month) {
+    month = moment().format("MM")
+  }
+  $( '#calendar' ).empty()
+  var daysOfWeek = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
+  $( '#calendar' ).append('<tr id="calendar_header"></tr>')
+  for(let x of daysOfWeek) {
+    $( '#calendar_header' ).append(`<td class="calendar_header_box">${x}</td>`)
+  }
+  var firstDay = moment(moment().format("YYYY")+'-'+month+'-01').format('dddd');
+  var totalDays = moment(moment().format("YYYY")+'-'+month, "YYYY-MM").daysInMonth()
+  var emptyStart = _.findIndex(daysOfWeek, function(o) { return o == firstDay; })
+  var totalWeeks = Math.ceil((totalDays+emptyStart) / 7)
+  var perWeek = 7;
+  var loopDays = 0;
+  var a = 0;
+  var b = 0;
+  var c = 0;
+  while (a < totalWeeks) {
+    // append week
+    $( '#calendar' ).append('<tr id="week_'+a+'"></tr>')
+    // first week append empty box till first day
+    if (a == 0) {
+      while (b < emptyStart) {
+        $( '#week_'+a ).append(`<td class="calendar_date_box"></td>`)
+        perWeek--;
+        b++;
+      }
+    }
+    // append days into calendar
+    while (c < perWeek) {
+      loopDays++;
+      $( '#week_'+a ).append(`<td id="date_${moment().format("YYYY")}_${month}_${(loopDays < 10 ? '0' : '') + loopDays}" class="calendar_date_box" style="">${loopDays}</td>`)
+      c++;
+      // break when loop reached last day of the month
+      if (loopDays == totalDays) {
+        break;
+      }
+    }
+    // restart loop for the following week
+    c = 0;
+    // reset week
+    perWeek = 7;
+    a++;
+  }
+  // append data into calendar
+  loadEvent();
+  var emptyEnd = (7*totalWeeks) - (totalDays+emptyStart)
+  // console.log(totalWeeks);
+  // console.log(emptyEnd);
+}
+function loadEvent(date) {
+  console.log($( '#JSON_value' ).val());
+  let temp = {}
+  try {
+    temp = JSON.parse($( '#JSON_value' ).val())
+  } catch (e) {
+    console.log(e);
+  }
+  _.forEach(temp, function(value, key) {
+    $( '#date_'+key ).append(`<div class="calendar_venue">${value.venue}</div>`)
+    if (value.background) {
+      $( '#date_'+key ).addClass('calendar_text_shadow')
+      $( '#date_'+key ).css('background', `url(${value.background}) no-repeat center`)
+    }
+  });
+}
+function changeMonth(date) {
+  $( '#calendar_month' ).html(`Month of ${date}`)
+  generateCalendar(moment().month(date).format("MM"));
+}
+function getImageLightness(imageSrc,callback) {
+    var img = document.createElement("img");
+    img.src = imageSrc;
+    img.style.display = "none";
+    document.body.appendChild(img);
+
+    var colorSum = 0;
+
+    img.onload = function() {
+        // create canvas
+        var canvas = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(this,0,0);
+
+        var imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+        var data = imageData.data;
+        var r,g,b,avg;
+
+        for(var x = 0, len = data.length; x < len; x+=4) {
+            r = data[x];
+            g = data[x+1];
+            b = data[x+2];
+
+            avg = Math.floor((r+g+b)/3);
+            colorSum += avg;
+        }
+
+        var brightness = Math.floor(colorSum / (this.width*this.height));
+        callback(brightness);
+    }
+}
+</script>
+<style media="screen">
+.calendar_header_box {
+  text-align: center;
+  width: 9rem;
+}
+.calendar_date_box {
+  text-align: center;
+  vertical-align: top;
+  height: 6rem;
+}
+.calendar_venue {
+  font-size: 0.8rem;
+}
+.calendar_text_shadow {
+    /* -webkit-text-stroke: 1px #fff; */
+    text-shadow: 3px 3px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+}
+</style>
