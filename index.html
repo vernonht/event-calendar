@@ -8,9 +8,22 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="container">
+  <div class="main_banner">
+    <span class="main_banner_title">What's Happening</span>
+    <span class="main_banner_subtitle">We seek to actively engage our community with fellowship, love, and good times. Below you will find a list of upcoming events that you can attend, volunteer, and share with others.</span>
+  </div>
+  <div class="container text-right">
+    <span class="pointer" onclick="changeView('list')">List view</span> |
+    <span class="pointer" onclick="changeView('calendar')">Calendar view</span>
+  </div>
+  <div class="container view" id="list_div">
+    <h1>Upcoming Events</h1>
+    <div class="d-block" id="event_list">
+    </div>
+  </div>
+  <div class="container view" id="calendar_div">
     <div class="d-block row text-center">
-      <h1>Event Calendar</h1>
+      <h1 id="calendar_month"></h1>
       <div class="btn-group py-4" role="group" aria-label="Basic example">
         <button type="button" class="btn btn-secondary" onclick="changeMonth('January')">January</button>
         <button type="button" class="btn btn-secondary" onclick="changeMonth('February')">February</button>
@@ -25,18 +38,19 @@
         <button type="button" class="btn btn-secondary" onclick="changeMonth('November')">November</button>
         <button type="button" class="btn btn-secondary" onclick="changeMonth('December')">December</button>
       </div>
-      <p id="calendar_month"></p>
       <table id="calendar" class="w-100"></table>
       <textarea id="JSON_value" class="form-control my-4" aria-label="With textarea"></textarea>
-      <button type="button" class="btn btn-primary" onclick="generateCalendar()">Update Record</button>
+      <button type="button" class="btn btn-primary" onclick="updateEvents()">Update Record</button>
     </div>
   </div>
 </body>
 </html>
 <script>
-$( '#JSON_value' ).html(`{"2018_08_19":{"venue": "FOUNDATION TRUTH", "background": "https://thumbnailer.mixcloud.com/unsafe/180x180/extaudio/d/a/c/2/3677-82f7-49ca-bed8-051e847d93e3"}, "2018_08_25":{"venue": "FOUNDATION TRUTH 2"}}`)
-$( '#calendar_month' ).html(`Month of ${moment().format("MMMM")}`)
-window.onload = generateCalendar(moment().format("MM"));
+var events = `{"2018_08_19":{"venue": "FOUNDATION TRUTH", "background": "https://thumbnailer.mixcloud.com/unsafe/180x180/extaudio/d/a/c/2/3677-82f7-49ca-bed8-051e847d93e3"}, "2018_08_25":{"venue": "FOUNDATION TRUTH 2"}}`
+$( '#JSON_value' ).html(events)
+$( '#calendar_month' ).html(`Events for ${moment().format("MMMM")}`)
+generateCalendar(moment().format("MM"));
+generateList();
 function generateCalendar(month) {
   if (!month) {
     month = moment().format("MM")
@@ -89,11 +103,32 @@ function generateCalendar(month) {
   // console.log(totalWeeks);
   // console.log(emptyEnd);
 }
+function generateList() {
+  console.log(events);
+  try {
+    temp = JSON.parse(events)
+  } catch (e) {
+    console.log(e);
+  }
+  $( '#event_list' ).empty()
+  $( '#event_list' ).append(`<div class="dropdown-divider"></div>`)
+  _.forEach(temp, function(value, key) {
+    $( '#event_list' ).append(`<div class="d-flex" id="${key}"></div>`)
+    if (value.background) {
+      $( '#'+key ).append(`<div class="col-3 text-center overflow_hidden"><img class="event_list_pic" src="${value.background}" alt=""></div>`)
+    } else {
+      $( '#'+key ).append(`<div class="col-3 text-center overflow_hidden"><span class="event_list_no_pic">${moment(_.replace(key, '_', ''), "YYYYMMDD").format("MM/D")}</span></div>`)
+    }
+    $( '#'+key ).append(`<div class="col-3">${moment(_.replace(key, '_', ''), "YYYYMMDD").format("MMMM D")}</div>`)
+    $( '#'+key ).append(`<div class="col-6">${value.venue}</div>`)
+    $( '#event_list' ).append(`<div class="dropdown-divider"></div>`)
+  });
+}
 function loadEvent(date) {
-  console.log($( '#JSON_value' ).val());
+  console.log(events);
   let temp = {}
   try {
-    temp = JSON.parse($( '#JSON_value' ).val())
+    temp = JSON.parse(events)
   } catch (e) {
     console.log(e);
   }
@@ -106,11 +141,55 @@ function loadEvent(date) {
   });
 }
 function changeMonth(date) {
-  $( '#calendar_month' ).html(`Month of ${date}`)
+  $( '#calendar_month' ).html(`Events for ${date}`)
   generateCalendar(moment().month(date).format("MM"));
+}
+function changeView(view) {
+  $( '.view' ).hide()
+  $( '#'+view+'_div' ).fadeIn('slow')
+}
+function updateEvents() {
+  events = $('#JSON_value').val()
+  generateCalendar(moment().format("MM"));
+  generateList();
 }
 </script>
 <style media="screen">
+.main_banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100vh;
+  background: #999;
+}
+.main_banner_title {
+  font-weight: 600;
+  color: white;
+  font-size: 4rem;
+}
+.main_banner_subtitle {
+  width: 50vw;
+  color: white;
+  font-size: 1.5rem;
+}
+.event_list_pic, .event_list_no_pic {
+  height: 150px;
+  transition: .5s ease;
+}
+.event_list_no_pic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ccc;
+  color: white;
+  font-weight: bold;
+  font-size: 3rem;
+}
+.event_list_pic:hover, .event_list_no_pic:hover {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
 .calendar_header_box {
   text-align: center;
   width: 9rem;
@@ -126,5 +205,11 @@ function changeMonth(date) {
 .calendar_text_shadow {
     /* -webkit-text-stroke: 1px #fff; */
     text-shadow: 3px 3px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+}
+.pointer {
+  cursor: pointer;
+}
+.overflow_hidden {
+  overflow: hidden;
 }
 </style>
